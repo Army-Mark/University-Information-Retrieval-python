@@ -367,6 +367,116 @@
             background-color: #c0392b;
         }
         
+        /* 删除确认弹窗样式  */
+        .delete-modal {
+            background-color: white;
+            padding: 40px 50px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        .delete-modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .delete-modal-message {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .delete-modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+        
+        .delete-btn {
+            padding: 12px 35px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .delete-btn-cancel {
+            background-color: #f0f0f0;
+            color: #666;
+        }
+        
+        .delete-btn-cancel:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .delete-btn-confirm {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .delete-btn-confirm:hover {
+            background-color: #c0392b;
+        }
+        
+        /* 权限不足弹窗样式 */
+        .error-modal {
+            background-color: white;
+            padding: 40px 50px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        .error-emoji {
+            font-size: 56px;
+            margin-bottom: 20px;
+        }
+        
+        .error-modal-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+        
+        .error-modal-message {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        .error-modal-actions {
+            display: flex;
+            justify-content: center;
+        }
+        
+        .error-btn {
+            padding: 12px 45px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .error-btn:hover {
+            opacity: 0.9;
+        }
+        
         .form-group {
             margin-bottom: 20px;
         }
@@ -571,8 +681,10 @@
         
         <div class="header">
             <div class="logo">
-                {% if university['学校ID'] %}
-                <img src="/logo/{{ university['学校ID'] }}.png" alt="{{ university['学校名称'] }} Logo">
+                {% if university.get('logo_path') %}
+                <img src="/{{ university['logo_path'] }}" alt="{{ university['学校名称'] }} Logo">
+                {% elif university['学校ID'] %}
+                <img src="/logo/{{ university['学校ID'] }}.png" alt="{{ university['学校名称'] }} Logo" onerror="this.parentElement.innerHTML='<div class=\'no-logo\'>无Logo</div>'">
                 {% else %}
                 <div class="no-logo">无Logo</div>
                 {% endif %}
@@ -661,13 +773,13 @@
         
         <div class="basic-info-section">
             <div class="section-title">基本信息</div>
-            <div class="description">{{ university['基本信息'] }}</div>
+            <div class="description">{{ university.get('基本信息', '暂无信息') }}</div>
         </div>
         
         <div class="actions">
             <a href="/" class="btn btn-back">返回</a>
-            <button class="btn btn-delete" id="deleteBtn" onclick="showDeleteModal()">删除</button>
             <button class="btn btn-edit" id="editBtn" onclick="handleEdit()">修改</button>
+            <button class="btn btn-delete" id="deleteBtn" onclick="showDeleteModal()">删除</button>
         </div>
     </div>
     
@@ -693,12 +805,24 @@
     
     <!-- 删除确认弹窗 -->
     <div class="modal-overlay" id="deleteModal">
-        <div class="login-modal">
-            <div class="modal-title">确认删除</div>
-            <div class="delete-message">确定要删除该院校吗？此操作不可恢复。</div>
-            <div class="modal-actions">
-                <button class="modal-btn modal-btn-secondary" onclick="hideDeleteModal()">取消</button>
-                <button class="modal-btn modal-btn-danger" onclick="confirmDelete()">确定删除</button>
+        <div class="delete-modal">
+            <div class="delete-modal-title">确认删除</div>
+            <div class="delete-modal-message">确定要删除该院校吗？此操作不可恢复。</div>
+            <div class="delete-modal-actions">
+                <button class="delete-btn delete-btn-cancel" onclick="hideDeleteModal()">取消</button>
+                <button class="delete-btn delete-btn-confirm" onclick="confirmDelete()">确定删除</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 权限不足弹窗 -->
+    <div class="modal-overlay" id="errorModal">
+        <div class="error-modal">
+            <div class="error-emoji">😔</div>
+            <div class="error-modal-title">权限不足</div>
+            <div class="error-modal-message" id="errorModalMessage">删除失败：权限不足，需要管理员权限</div>
+            <div class="error-modal-actions">
+                <button class="error-btn" onclick="hideErrorModal()">确定</button>
             </div>
         </div>
     </div>
@@ -853,18 +977,38 @@
                     // 删除成功后跳转到首页
                     window.location.href = '/';
                 } else {
-                    alert('删除失败: ' + data.message);
+                    hideDeleteModal();
+                    showErrorModal(data.message);
                 }
             } catch (error) {
                 console.error('删除错误:', error);
-                alert('删除失败');
+                hideDeleteModal();
+                showErrorModal('删除失败，请重试');
             }
+        }
+        
+        // 显示权限不足弹窗
+        function showErrorModal(message) {
+            document.getElementById('errorModalMessage').textContent = message;
+            document.getElementById('errorModal').classList.add('show');
+        }
+        
+        // 隐藏权限不足弹窗
+        function hideErrorModal() {
+            document.getElementById('errorModal').classList.remove('show');
         }
         
         // 点击删除弹窗外部关闭
         document.getElementById('deleteModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 hideDeleteModal();
+            }
+        });
+        
+        // 点击权限不足弹窗外部关闭
+        document.getElementById('errorModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideErrorModal();
             }
         });
         
