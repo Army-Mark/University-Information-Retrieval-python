@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日志
+*.log
+
+# 数据目录
+data/
+
+# 备份文件
+*.backup.*
+
+# 临时文件
+*.tmp
+*.temp
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 数据库文件（避免提交大文件）
+*.sqlite
+*.sqlite3
+
+# Logo 图片文件夹（如果太大可以考虑不提交）
+# logo/
