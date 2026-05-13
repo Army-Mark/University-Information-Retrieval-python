@@ -29,6 +29,43 @@ class Database:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             
+            # 创建用户表
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL UNIQUE,
+                    password TEXT NOT NULL,
+                    role TEXT DEFAULT 'user'
+                )
+            ''')
+            
+            # 创建高校信息表
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS universities (
+                    学校ID TEXT PRIMARY KEY,
+                    学校名称 TEXT,
+                    地址 TEXT,
+                    类别 TEXT,
+                    性质 TEXT,
+                    归属部门 TEXT,
+                    标签 TEXT,
+                    建校时间 TEXT,
+                    占地面积 TEXT,
+                    保研星级 TEXT,
+                    博士点数量 TEXT,
+                    硕士点数量 TEXT,
+                    国家重点学科数量 TEXT,
+                    软科综合排名 TEXT,
+                    校友会综合排名 TEXT,
+                    QS世界排名 TEXT,
+                    US世界排名 TEXT,
+                    泰晤士排名 TEXT,
+                    人气值排名 TEXT,
+                    基本信息 TEXT,
+                    logo_path TEXT
+                )
+            ''')
+            
             # 创建操作日志表
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS operation_logs (
@@ -71,10 +108,15 @@ class Database:
             ''')
             
             # 检查users表是否有role字段
-            cursor.execute("PRAGMA table_info(users)")
-            columns = [col[1] for col in cursor.fetchall()]
-            if "role" not in columns:
-                cursor.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")
+            try:
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
+                if cursor.fetchone():
+                    cursor.execute("PRAGMA table_info(users)")
+                    columns = [col[1] for col in cursor.fetchall()]
+                    if "role" not in columns:
+                        cursor.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")
+            except sqlite3.OperationalError:
+                pass
             
             # 创建索引
             try:
