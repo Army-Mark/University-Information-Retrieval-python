@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ university['学校名称'] }} - 高校信息查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 30px;
+            padding: 40px 80px;
+            width: 100%;
+            max-width: 1400px;
+            height: calc(100vh - 80px);
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+        }
+        
+        .header-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 36px;
+            color: #333;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        h1:hover {
+            color: #667eea;
+        }
+        
+        .user-area {
+            position: absolute;
+            right: 20px;
+        }
+        
+        .login-btn {
+            color: #667eea;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+            background: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .login-btn:hover {
+            color: #764ba2;
+        }
+        
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .username {
+            color: #764ba2;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .username:hover {
+            color: #667eea;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            min-width: 160px;
+            z-index: 2000;
+        }
+        
+        .user-dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .dropdown-item {
+            display: block;
+            padding: 15px 25px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border: none;
+            background: none;
+            width: 100%;
+        }
+        
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* 学校信息头部 */
+        .school-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 2px dashed #ddd;
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 8px;
+        }
+        
+        .no-logo {
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .school-info {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .school-left {
+            flex: 1;
+        }
+        
+        .school-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .school-location {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .school-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .school-right {
+            text-align: right;
+        }
+        
+        .school-meta-item {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        
+        /* 标签区域 */
+        .tags-section {
+            margin-bottom: 12px;
+        }
+        
+        .tags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .tag {
+            background: #f0f0f0;
+            color: #666;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        /* 指标卡片区域 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        /* 排名区域 */
+        .rank-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .rank-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+        }
+        
+        .rank-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .rank-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #e74c3c;
+        }
+        
+        /* 基本信息 */
+        .basic-info-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .basic-info-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .basic-info-content {
+            line-height: 1.8;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        /* 按钮区域 */
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            padding-top: 5px;
+        }
+        
+        .btn {
+            padding: 10px 35px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        /* 登录弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .login-modal {
+            background-color: white;
+            padding: 50px 60px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .modal-title {
+            font-size: 28px;
+            margin-bottom: 35px;
+            text-align: center;
+            color: #333;
+            font-weight: 700;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 35px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .modal-btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .modal-btn-secondary {
+            background-color: #f0f0f0;
+            color: #666;
+        }
+        
+        .modal-btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .card {
+                padding: 40px 50px;
+            }
+            
+            h1 {
+                font-size: 36px;
+            }
+            
+            .user-area {
+                right: 70px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .rank-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 10px;
+            }
+            
+            .card {
+                padding: 25px 20px;
+                border-radius: 20px;
+            }
+            
+            h1 {
+                font-size: 28px;
+                text-align: center;
+            }
+            
+            .header-section {
+                flex-direction: column;
+                gap: 15px;
+                margin-bottom: 30px;
+            }
+            
+            .user-area {
+                position: static;
+            }
+            
+            .school-header {
+                flex-direction: column;
+            }
+            
+            .school-info {
+                flex-direction: column;
+            }
+            
+            .school-right {
+                text-align: left;
+                margin-top: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .rank-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录弹窗 -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="login-modal">
+            <div class="modal-title">用户登录</div>
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入密码">
+            </div>
+            <div class="error-message" id="errorMessage"></div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-secondary" onclick="hideLoginModal()">取消</button>
+                <button class="modal-btn modal-btn-primary" onclick="doLogin()">登录</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="header-section">
+            <h1 onclick="window.location.href='/'">高校信息检索</h1>
+            <div class="user-area" id="userArea">
+                <button class="login-btn" id="loginBtn" onclick="showLoginModal()">登录</button>
+            </div>
+        </div>
+        
+        <!-- 学校信息头部 -->
+        <div class="school-header">
+            <div class="logo" id="logoContainer">
+                <div class="no-logo" id="fallbackLogo">无Logo</div>
+            </div>
+            
+            <div class="school-info">
+                <div class="school-left">
+                    <div class="school-name">{{ university['学校名称'] }}</div>
+                    <div class="school-location">{{ university['地址'] }}</div>
+                    <div class="school-tags">
+                        {% if university['类别'] %}
+                            <span>{{ university['类别'] }}</span>
+                        {% endif %}
+                        {% if university['性质'] %}
+                            <span>|</span>
+                            <span>{{ university['性质'] }}</span>
+                        {% endif %}
+                        {% if university['归属部门'] %}
+                            <span>|</span>
+                            <span>{{ university['归属部门'] }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="school-right">
+                    {% if university['建校时间'] %}
+                    <div class="school-meta-item">建校时间：{{ university['建校时间'] }}</div>
+                    {% endif %}
+                    {% if university['占地面积'] %}
+                    <div class="school-meta-item">占地面积：{{ university['占地面积'] }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- 标签区域 -->
+        {% if university['标签'] %}
+        <div class="tags-section">
+            <div class="tags-list">
+                {% for tag in university['标签'].split(' ') %}
+                    {% if tag %}
+                    <span class="tag">{{ tag }}</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- 指标卡片区域 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">🎓 保研星级</div>
+                <div class="stat-value">{% if university['保研星级'] %}{{ university['保研星级'] }}{% else %}-{% endif %}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📚 博士点</div>
+                <div class="stat-value">{% if university['博士点数量'] %}{{ university['博士点数量'] }}{% else %}-{% endif %}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📝 硕士点</div>
+                <div class="stat-value">{% if university['硕士点数量'] %}{{ university['硕士点数量'] }}{% else %}-{% endif %}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🏆 国家重点学科</div>
+                <div class="stat-value">{% if university['国家重点学科数量'] %}{{ university['国家重点学科数量'] }}{% else %}-{% endif %}</div>
+            </div>
+        </div>
+        
+        <!-- 排名区域 -->
+        <div class="rank-grid">
+            {% if university['软科综合排名'] %}
+            <div class="rank-card">
+                <div class="rank-label">软科综合</div>
+                <div class="rank-value">{{ university['软科综合排名'] }}</div>
+            </div>
+            {% endif %}
+            {% if university['校友会综合排名'] %}
+            <div class="rank-card">
+                <div class="rank-label">校友会综合</div>
+                <div class="rank-value">{{ university['校友会综合排名'] }}</div>
+            </div>
+            {% endif %}
+            {% if university['QS世界排名'] %}
+            <div class="rank-card">
+                <div class="rank-label">QS世界</div>
+                <div class="rank-value">{{ university['QS世界排名'] }}</div>
+            </div>
+            {% endif %}
+            {% if university['US世界排名'] %}
+            <div class="rank-card">
+                <div class="rank-label">US世界</div>
+                <div class="rank-value">{{ university['US世界排名'] }}</div>
+            </div>
+            {% endif %}
+            {% if university['泰晤士排名'] %}
+            <div class="rank-card">
+                <div class="rank-label">泰晤士 (大陆)</div>
+                <div class="rank-value">{{ university['泰晤士排名'] }}</div>
+            </div>
+            {% endif %}
+            {% if university['人气值排名'] %}
+            <div class="rank-card">
+                <div class="rank-label">人气值排名</div>
+                <div class="rank-value">{{ university['人气值排名'] }}</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- 基本信息 -->
+        {% if university['基本信息'] %}
+        <div class="basic-info-section">
+            <div class="basic-info-title">基本信息</div>
+            <div class="basic-info-content">{{ university['基本信息'] }}</div>
+        </div>
+        {% endif %}
+        
+        <!-- 按钮区域 -->
+        <div class="actions">
+            <button class="btn btn-secondary" onclick="window.location.href='/'">返回</button>
+            <button class="btn btn-danger" id="deleteBtn" style="display: none;">删除</button>
+            <button class="btn btn-primary" id="editBtn" style="display: none;" onclick="window.location.href='/edit/{{ university['学校ID'] }}'">修改</button>
+        </div>
+    </div>
+    
+    <script>
+        // 智能Logo加载函数
+        function loadUniversityLogo(schoolId) {
+            const logoContainer = document.getElementById('logoContainer');
+            const fallbackLogo = document.getElementById('fallbackLogo');
+            
+            // 可能的logo文件格式，按优先级排序
+            const extensions = ['png', 'jpg', 'jpeg', 'gif'];
+            let triedCount = 0;
+            
+            function tryNextExtension() {
+                if (triedCount >= extensions.length) {
+                    // 所有格式都尝试过了，显示默认
+                    fallbackLogo.style.display = 'block';
+                    return;
+                }
+                
+                const ext = extensions[triedCount];
+                const img = new Image();
+                img.src = `/logo/${schoolId}.${ext}`;
+                img.alt = '{{ university['学校名称'] }} Logo';
+                
+                img.onload = function() {
+                    fallbackLogo.style.display = 'none';
+                    logoContainer.appendChild(img);
+                };
+                
+                img.onerror = function() {
+                    triedCount++;
+                    tryNextExtension();
+                };
+            }
+            
+            // 首先尝试使用数据库中的logo_path
+            {% if university.get('logo_path') %}
+            const dbImg = new Image();
+            dbImg.src = '/logo/{{ university['logo_path'] }}';
+            dbImg.alt = '{{ university['学校名称'] }} Logo';
+            
+            dbImg.onload = function() {
+                fallbackLogo.style.display = 'none';
+                logoContainer.appendChild(dbImg);
+            };
+            
+            dbImg.onerror = function() {
+                // 数据库中的路径无效，尝试其他格式
+                tryNextExtension();
+            };
+            {% else %}
+            // 没有数据库路径，直接尝试各格式
+            tryNextExtension();
+            {% endif %}
+        }
+        
+        // 登录相关功能
+        let isLoggedIn = false;
+        let currentUsername = '';
+        let currentRole = '';
+        
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/check_login');
+                const data = await response.json();
+                if (data.logged_in) {
+                    isLoggedIn = true;
+                    currentUsername = data.username;
+                    currentRole = data.role || 'user';
+                    updateLoginUI();
+                }
+            } catch (error) {
+                console.error('检查登录状态错误:', error);
+            }
+        }
+        
+        function updateLoginUI() {
+            const userArea = document.getElementById('userArea');
+            if (isLoggedIn) {
+                userArea.innerHTML = `
+                    <a class="username" href="/account">${currentUsername}</a>
+                `;
+                
+                document.getElementById('editBtn').style.display = 'block';
+                
+                if (currentRole === 'admin') {
+                    document.getElementById('deleteBtn').style.display = 'block';
+                }
+            } else {
+                userArea.innerHTML = `
+                    <button class="login-btn" id="loginBtn" onclick="showLoginModal()">登录</button>
+                `;
+            }
+        }
+        
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.add('show');
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('username').focus();
+        }
+        
+        function hideLoginModal() {
+            document.getElementById('loginModal').classList.remove('show');
+        }
+        
+        async function doLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (!username || !password) {
+                errorMessage.textContent = '请输入用户名和密码';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isLoggedIn = true;
+                    currentUsername = username;
+                    currentRole = data.role || 'user';
+                    updateLoginUI();
+                    hideLoginModal();
+                } else {
+                    errorMessage.textContent = data.message || '登录失败';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                errorMessage.textContent = '登录失败，请重试';
+                errorMessage.style.display = 'block';
+            }
+        }
+        
+        async function doLogout() {
+            try {
+                await fetch('/logout', { method: 'POST' });
+                isLoggedIn = false;
+                currentUsername = '';
+                currentRole = '';
+                updateLoginUI();
+            } catch (error) {
+                console.error('退出错误:', error);
+            }
+        }
+        
+        document.getElementById('deleteBtn').addEventListener('click', async function() {
+            if (confirm('确定要删除这所学校吗？')) {
+                try {
+                    const response = await fetch('/delete_school', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ school_id: '{{ university['学校ID'] }}' })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        alert('删除成功！');
+                        window.location.href = '/';
+                    } else {
+                        alert('删除失败：' + (data.message || '未知错误'));
+                    }
+                } catch (error) {
+                    console.error('删除学校错误:', error);
+                    alert('删除失败：' + error.message);
+                }
+            }
+        });
+        
+        document.getElementById('loginModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideLoginModal();
+            }
+        });
+        
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                doLogin();
+            }
+        });
+        
+        // 等待DOM加载完成后执行初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUniversityLogo('{{ university['学校ID'] }}');
+            checkLoginStatus();
+        });
+    </script>
+</body>
+</html>

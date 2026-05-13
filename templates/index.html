@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高校信息查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 30px;
+            padding: 50px 80px;
+            width: 100%;
+            max-width: 1400px;
+            height: calc(100vh - 80px);
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 36px;
+            color: #333;
+            font-weight: 700;
+            text-align: center;
+        }
+        
+        .user-area {
+            position: absolute;
+            right: 0;
+        }
+        
+        .login-btn {
+            color: #667eea;
+            font-size: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+            background: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .login-btn:hover {
+            color: #764ba2;
+        }
+        
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .username {
+            color: #764ba2;
+            font-size: 20px;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .username:hover {
+            color: #667eea;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            min-width: 160px;
+            z-index: 2000;
+        }
+        
+        .user-dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .dropdown-item {
+            display: block;
+            padding: 15px 25px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border: none;
+            background: none;
+            width: 100%;
+        }
+        
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 40px;
+            margin-top: 30px;
+        }
+        
+        #search-input {
+            width: 100%;
+            padding: 18px 25px;
+            font-size: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        #search-input:focus {
+            border-color: #667eea;
+        }
+        
+        #search-input::placeholder {
+            color: #999;
+        }
+        
+        #search-btn {
+            padding: 18px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        #search-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        #suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 0 0 10px 10px;
+            max-height: 350px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+            margin-top: 5px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            display: none;
+        }
+        
+        .suggestion-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .suggestion-id {
+            color: #999;
+            font-size: 18px;
+            min-width: 60px;
+        }
+        
+        .suggestion-name {
+            color: #333;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .match-label {
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        
+        .match-label.exact {
+            background-color: #667eea;
+            color: white;
+        }
+        
+        .match-label.id-match {
+            background-color: #e8f5e9;
+            color: #43a047;
+        }
+        
+        .match-label.fuzzy {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .table-container {
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+            max-height: 400px;
+            position: relative;
+        }
+        
+        .table-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .scroll-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .scroll-content-inner {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            flex-shrink: 0;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        th, td {
+            padding: 20px 25px;
+            text-align: left;
+            font-size: 20px;
+            width: 20%;
+        }
+        
+        th {
+            color: white;
+            font-weight: 700;
+        }
+        
+        td {
+            color: #666;
+        }
+        
+        tbody tr {
+            background-color: #fafafa;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        
+        tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+        
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        td:first-child {
+            color: #bbb;
+        }
+        
+        td:nth-child(2) {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        /* 登录弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .login-modal {
+            background-color: white;
+            padding: 50px 60px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .modal-title {
+            font-size: 28px;
+            margin-bottom: 35px;
+            text-align: center;
+            color: #333;
+            font-weight: 700;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 35px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .modal-btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .modal-btn-secondary {
+            background-color: #f0f0f0;
+            color: #666;
+        }
+        
+        .modal-btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .card {
+                padding: 40px 50px;
+            }
+            
+            h1 {
+                font-size: 36px;
+            }
+            
+            .user-area {
+                right: 70px;
+            }
+            
+            th, td {
+                font-size: 16px;
+                padding: 15px 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 10px;
+            }
+            
+            .card {
+                padding: 25px 20px;
+                border-radius: 20px;
+            }
+            
+            h1 {
+                font-size: 28px;
+                text-align: center;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                margin-bottom: 30px;
+            }
+            
+            .user-area {
+                position: static;
+            }
+            
+            #search-input {
+                padding: 15px 20px;
+                font-size: 16px;
+            }
+            
+            th, td {
+                font-size: 14px;
+                padding: 12px 15px;
+            }
+            
+            .suggestion-id {
+                font-size: 14px;
+                min-width: 45px;
+            }
+            
+            .suggestion-name {
+                font-size: 14px;
+            }
+            
+            .login-modal {
+                padding: 35px 25px;
+                margin: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录弹窗 -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="login-modal">
+            <div class="modal-title">用户登录</div>
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入密码">
+            </div>
+            <div class="error-message" id="errorMessage"></div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-secondary" onclick="hideLoginModal()">取消</button>
+                <button class="modal-btn modal-btn-primary" onclick="doLogin()">登录</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="header">
+            <h1>高校信息查询</h1>
+            <div class="user-area" id="userArea">
+                <button class="login-btn" id="loginBtn" onclick="showLoginModal()">登录</button>
+            </div>
+        </div>
+        
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="请输入学校名称或ID搜索..." autocomplete="off">
+            <div id="suggestions"></div>
+        </div>
+        
+        <div class="table-container" id="tableContainer">
+            <table class="table-header">
+                <thead>
+                    <tr>
+                        <th>学校ID</th>
+                        <th>学校名称</th>
+                        <th>地址</th>
+                        <th>类别</th>
+                        <th>性质</th>
+                    </tr>
+                </thead>
+            </table>
+            <div class="scroll-content" id="scrollContent">
+                <div class="scroll-content-inner" id="scrollContentInner">
+                    <table id="mainTable">
+                        <tbody id="tableBody">
+                            <!-- 动态加载数据 -->
+                        </tbody>
+                    </table>
+                    <table id="cloneTable">
+                        <tbody id="tableBodyClone">
+                            <!-- 动态加载数据（用于循环滚动） -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedId = null;
+        let allSchools = [];
+        let scrollTimer = null;
+        let isPaused = false;
+        const SCROLL_SPEED = 1;
+        const SCROLL_INTERVAL = 50;
+        
+        // 加载所有学校数据
+        async function loadAllSchools() {
+            try {
+                const response = await fetch('/api/scrolling_data');
+                const result = await response.json();
+                allSchools = result.data || [];
+                renderTable(allSchools);
+                initAutoScroll();
+            } catch (error) {
+                console.error('加载学校数据错误:', error);
+            }
+        }
+        
+        // 渲染表格
+        function renderTable(schools) {
+            const tableBody = document.getElementById('tableBody');
+            const tableBodyClone = document.getElementById('tableBodyClone');
+            
+            if (!schools || schools.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #999; padding: 40px;">暂无数据</td></tr>';
+                return;
+            }
+            
+            const rowsHtml = schools.map(school => 
+                `<tr onclick="window.location.href='/university/${school['学校ID']}'">
+                    <td>${school['学校ID']}</td>
+                    <td>${school['学校名称']}</td>
+                    <td>${school['地址'] || ''}</td>
+                    <td>${school['类别'] || ''}</td>
+                    <td>${school['性质'] || ''}</td>
+                </tr>`
+            ).join('');
+            
+            tableBody.innerHTML = rowsHtml;
+            tableBodyClone.innerHTML = rowsHtml;
+        }
+        
+        // 初始化自动滚动
+        function initAutoScroll() {
+            const container = document.getElementById('scrollContent');
+            const scrollContentInner = document.getElementById('scrollContentInner');
+            
+            // 从localStorage恢复滚动位置
+            const savedPosition = localStorage.getItem('scrollPosition');
+            if (savedPosition) {
+                container.scrollTop = parseInt(savedPosition);
+            }
+            
+            // 保存滚动位置
+            container.addEventListener('scroll', function() {
+                localStorage.setItem('scrollPosition', container.scrollTop);
+            });
+            
+            // 鼠标悬停停止滚动
+            container.addEventListener('mouseenter', function() {
+                isPaused = true;
+            });
+            
+            // 鼠标离开继续滚动
+            container.addEventListener('mouseleave', function() {
+                isPaused = false;
+            });
+            
+            // 开始滚动
+            startAutoScroll();
+        }
+        
+        // 开始自动滚动
+        function startAutoScroll() {
+            const container = document.getElementById('scrollContent');
+            const scrollContentInner = document.getElementById('scrollContentInner');
+            
+            scrollTimer = setInterval(() => {
+                if (isPaused) return;
+                
+                let scrollTop = container.scrollTop;
+                const tbodyHeight = document.querySelector('#tableBody').offsetHeight;
+                
+                scrollTop += SCROLL_SPEED;
+                
+                // 当滚动到第一份tbody结束时，无缝切换到克隆表格
+                if (scrollTop >= tbodyHeight) {
+                    scrollTop = 0;
+                }
+                
+                container.scrollTop = scrollTop;
+            }, SCROLL_INTERVAL);
+        }
+        
+        // 搜索建议功能
+        async function showSearchSuggestions() {
+            const keyword = document.getElementById('search-input').value.trim();
+            console.log('触发搜索建议:', keyword);
+            selectedId = null;
+            
+            if (keyword.length < 1) {
+                console.log('搜索内容为空，隐藏建议');
+                document.getElementById('suggestions').innerHTML = '';
+                document.getElementById('suggestions').style.display = 'none';
+                return;
+            }
+            
+            try {
+                console.log('发送搜索请求:', `/search?keyword=${encodeURIComponent(keyword)}`);
+                const response = await fetch(`/search?keyword=${encodeURIComponent(keyword)}`);
+                if (!response.ok) {
+                    throw new Error(`网络请求失败: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log('搜索响应数据:', data);
+                
+                if (data && data.length > 0) {
+                    console.log('显示搜索建议，共', data.length, '条');
+                    document.getElementById('suggestions').innerHTML = data.map(item => {
+                        let labelHtml = '';
+                        if (item.match_type === 'exact') {
+                            labelHtml = '<span class="match-label exact">精确匹配</span>';
+                        } else if (item.match_type === 'id_match') {
+                            labelHtml = '<span class="match-label id-match">ID匹配</span>';
+                        } else if (item.match_type === 'fuzzy') {
+                            labelHtml = '<span class="match-label fuzzy">模糊匹配</span>';
+                        }
+                        return `<div class="suggestion-item" data-id="${item.id}" data-name="${item.name}">
+                            <span class="suggestion-id">${item.id}</span>
+                            <span class="suggestion-name">${item.name}</span>
+                            ${labelHtml}
+                        </div>`;
+                    }).join('');
+                    document.getElementById('suggestions').style.display = 'block';
+                    console.log('建议容器显示状态:', document.getElementById('suggestions').style.display);
+                } else {
+                    console.log('无搜索结果，隐藏建议');
+                    document.getElementById('suggestions').innerHTML = '';
+                    document.getElementById('suggestions').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('搜索建议错误:', error);
+                document.getElementById('suggestions').innerHTML = '<div class="suggestion-item">搜索失败，请重试</div>';
+                document.getElementById('suggestions').style.display = 'block';
+            }
+        }
+        
+        // 点击建议项
+        function initSuggestionClick() {
+            document.getElementById('suggestions').addEventListener('click', function(e) {
+                const item = e.target.closest('.suggestion-item');
+                if (item) {
+                    const id = item.getAttribute('data-id');
+                    document.getElementById('suggestions').style.display = 'none';
+                    window.location.href = `/university/${id}`;
+                }
+            });
+        }
+        
+        // 执行搜索
+        function doSearch() {
+            const keyword = document.getElementById('search-input').value.trim();
+            if (keyword) {
+                const searchValue = selectedId || keyword;
+                window.location.href = `/university/${searchValue}`;
+            }
+        }
+        
+        // 事件绑定
+        function initSearchEvents() {
+            document.getElementById('search-input').addEventListener('input', showSearchSuggestions);
+            document.getElementById('search-input').addEventListener('focus', showSearchSuggestions);
+            document.getElementById('search-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    doSearch();
+                }
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.search-container')) {
+                    document.getElementById('suggestions').style.display = 'none';
+                }
+            });
+        }
+        
+        // 登录相关功能
+        let isLoggedIn = false;
+        let currentUsername = '';
+        let currentRole = '';
+        
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/check_login');
+                const data = await response.json();
+                if (data.logged_in) {
+                    isLoggedIn = true;
+                    currentUsername = data.username;
+                    currentRole = data.role || 'user';
+                    updateLoginUI();
+                }
+            } catch (error) {
+                console.error('检查登录状态错误:', error);
+            }
+        }
+        
+        function updateLoginUI() {
+            const userArea = document.getElementById('userArea');
+            if (isLoggedIn) {
+                userArea.innerHTML = `
+                    <div class="user-dropdown">
+                        <a class="username" href="/account">${currentUsername}</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="/add_school">添加院校</a>
+                            <button class="dropdown-item" onclick="doLogout()">退出登录</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                userArea.innerHTML = `
+                    <button class="login-btn" id="loginBtn" onclick="showLoginModal()">登录</button>
+                `;
+            }
+        }
+        
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.add('show');
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('username').focus();
+        }
+        
+        function hideLoginModal() {
+            document.getElementById('loginModal').classList.remove('show');
+        }
+        
+        async function doLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (!username || !password) {
+                errorMessage.textContent = '请输入用户名和密码';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isLoggedIn = true;
+                    currentUsername = username;
+                    currentRole = data.role || 'user';
+                    updateLoginUI();
+                    hideLoginModal();
+                } else {
+                    errorMessage.textContent = data.message || '登录失败';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                errorMessage.textContent = '登录失败，请重试';
+                errorMessage.style.display = 'block';
+            }
+        }
+        
+        async function doLogout() {
+            try {
+                await fetch('/logout', { method: 'POST' });
+                isLoggedIn = false;
+                currentUsername = '';
+                currentRole = '';
+                updateLoginUI();
+            } catch (error) {
+                console.error('退出错误:', error);
+            }
+        }
+        
+        document.getElementById('loginModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideLoginModal();
+            }
+        });
+        
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                doLogin();
+            }
+        });
+        
+        // 等待DOM加载完成后执行初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initSuggestionClick();
+            initSearchEvents();
+            checkLoginStatus();
+            loadAllSchools();
+        });
+    </script>
+</body>
+</html>
