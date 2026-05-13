@@ -1,3 +1,4 @@
+import os
 import re
 import json
 from typing import List, Optional, Tuple
@@ -30,9 +31,11 @@ class UniversityService:
         self,
         university_repo: UniversityRepository,
         log_repo: OperationLogRepository,
+        logo_dir: str = None,
     ):
         self.university_repo = university_repo
         self.log_repo = log_repo
+        self.logo_dir = logo_dir
     
     def get_all(self) -> List[University]:
         return self.university_repo.get_all()
@@ -131,18 +134,28 @@ class UniversityService:
             
             success = self.university_repo.delete(school_id)
             
-            if success and user:
-                log = OperationLog(
-                    operation_type="delete",
-                    table_name="universities",
-                    record_id=school_id,
-                    user_id=user.id,
-                    username=user.username,
-                    ip_address=ip_address,
-                    user_agent=user_agent,
-                    old_data=json.dumps(old.to_dict(), ensure_ascii=False),
-                )
-                self.log_repo.create(log)
+            if success:
+                if self.logo_dir:
+                    for ext in ['.png', '.jpg', '.jpeg', '.gif']:
+                        logo_path = os.path.join(self.logo_dir, f"{school_id}{ext}")
+                        if os.path.exists(logo_path):
+                            try:
+                                os.remove(logo_path)
+                            except Exception:
+                                pass
+                
+                if user:
+                    log = OperationLog(
+                        operation_type="delete",
+                        table_name="universities",
+                        record_id=school_id,
+                        user_id=user.id,
+                        username=user.username,
+                        ip_address=ip_address,
+                        user_agent=user_agent,
+                        old_data=json.dumps(old.to_dict(), ensure_ascii=False),
+                    )
+                    self.log_repo.create(log)
             
             return success, None
         except Exception as e:

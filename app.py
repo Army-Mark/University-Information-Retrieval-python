@@ -70,7 +70,7 @@ def create_app(config: Config = None) -> Flask:
     log_repo = OperationLogRepository(db)
     settings_repo = UserSettingsRepository(db)
 
-    university_service = UniversityService(university_repo, log_repo)
+    university_service = UniversityService(university_repo, log_repo, logo_dir)
     user_service = UserService(user_repo, log_repo)
     log_service = OperationLogService(log_repo)
     settings_service = SettingsService(settings_repo)
