@@ -244,7 +244,7 @@ python app.py
 #### 使用说明
 
 1. 应用启动后，默认访问地址：`http://localhost:5000`
-2. 默认管理员账户：`admin` / `admin`
+2. 默认管理员账户：`admin` / `admin123`
 3. 数据库文件位于：`data/school.db`
 4. Logo文件存储于：`logo/` 目录
 
@@ -275,7 +275,7 @@ docker-compose down -v
 
 | 角色 | 用户名 | 密码 | 权限说明 |
 |------|--------|------|----------|
-| 管理员 | admin | admin | 全部功能，包括账户管理、日志删除、学校增删改等 |
+| 管理员 | admin | admin123 | 全部功能，包括账户管理、日志删除、学校增删改等 |
 | 普通用户 | user | user1234 | 查看学校信息、管理自己的账户 |
 
 > ⚠️ **安全提示**：生产环境请立即修改默认密码！
@@ -295,7 +295,7 @@ Content-Type: application/json
 请求体：
 {
     "username": "admin",
-    "password": "admin"
+    "password": "admin123"
 }
 
 成功响应：
@@ -887,7 +887,7 @@ SESSION_COOKIE_SAMESITE=Lax    # CSRF防护：Lax/Strict/None
 |--------|------|------|------|
 | id | INTEGER | 主键，自增 | 1 |
 | username | TEXT | 用户名，唯一索引 | "admin" |
-| password | TEXT | 密码（加密存储） | "admin" |
+| password | TEXT | 密码（加密存储） | "admin123" |
 | role | TEXT | 角色：admin/user | "admin" |
 | created_at | DATETIME | 创建时间 | "2024-01-01 00:00:00" |
 
